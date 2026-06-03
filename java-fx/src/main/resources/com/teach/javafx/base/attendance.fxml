@@ -15,11 +15,11 @@
         <VBox spacing="10" styleClass="query-panel">
             <Label styleClass="page-title" text="考勤管理"/>
             <HBox spacing="10">
-                <Label minWidth="80" text="学生学号:"/>
+                <Label styleClass="query-label" text="学生学号:"/>
                 <TextField fx:id="queryStudentNumField" prefWidth="150"/>
-                <Label minWidth="80" text="学生名称:"/>
+                <Label styleClass="query-label" text="学生名称:"/>
                 <TextField fx:id="queryStudentNameField" prefWidth="150"/>
-                <Label minWidth="80" text="课程名称:"/>
+                <Label styleClass="query-label" text="课程名称:"/>
                 <TextField fx:id="queryCourseNameField" prefWidth="150"/>
                 <Button text="查询" onAction="#onQueryButtonClick"/>
             </HBox>

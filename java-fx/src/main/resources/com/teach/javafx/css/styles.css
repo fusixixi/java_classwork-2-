@@ -38,6 +38,10 @@
     -fx-text-fill: #334155;
 }
 
+.query-label {
+    -fx-min-width: 80;
+}
+
 .query-panel,
 .form-panel,
 .menu-form-panel,

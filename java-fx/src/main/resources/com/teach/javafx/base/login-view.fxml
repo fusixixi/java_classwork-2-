@@ -35,7 +35,7 @@
                                 <VBox spacing="2">
                                     <children>
                                         <Label styleClass="auth-title" text="教学管理系统"/>
-                                        <Label text="请选择身份快速登录"/>
+                                        <Label text="请选择您的身份登录"/>
                                     </children>
                                 </VBox>
                             </children>
