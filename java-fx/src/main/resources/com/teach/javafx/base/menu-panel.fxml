@@ -6,9 +6,9 @@
 
 <!-- 菜单管理面板FXML配置文件 对应页面交互控制类 com.teach.javafx.controller.base.MenuController -->
 
-<BorderPane xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.teach.javafx.controller.base.MenuController">
+<BorderPane styleClass="menu-root-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.teach.javafx.controller.base.MenuController">
    <top>
-       <HBox id="HBox" alignment="CENTER_LEFT" spacing="5.0">
+       <HBox id="HBox" alignment="CENTER_LEFT" spacing="5.0" styleClass="menu-toolbar">
            <children>
                <FlowPane nodeOrientation="LEFT_TO_RIGHT" prefHeight="40.0" prefWidth="600.0" BorderPane.alignment="CENTER">
                    <children>
@@ -28,7 +28,7 @@
        <SplitPane dividerPositions="0.29797979797979796" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
            <items>
                <TreeView fx:id="menuTreeView" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
-               <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="300.0" spacing="20.0">
+               <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="300.0" spacing="20.0" styleClass="menu-form-panel">
                    <padding>
                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
                    </padding>
