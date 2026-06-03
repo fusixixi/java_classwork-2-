@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 
 public class ApprovalWorkflowController extends ToolController {
+    private boolean isSuccess(DataResponse res) {
+        return res != null && (Integer.valueOf(0).equals(res.getCode()) || Integer.valueOf(200).equals(res.getCode()));
+    }
     @FXML
     private TableView<Map> dataTableView;
     @FXML
@@ -78,7 +81,7 @@ public class ApprovalWorkflowController extends ToolController {
     public void initialize() {
         DataRequest req = new DataRequest();
         DataResponse res = HttpRequestUtil.request("/api/approvalWorkflow/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             workflowList = (ArrayList<Map>) res.getData();
         }
 
@@ -135,7 +138,7 @@ public class ApprovalWorkflowController extends ToolController {
         DataRequest req = new DataRequest();
         req.add("workflowId", workflowId);
         DataResponse res = HttpRequestUtil.request("/api/approvalWorkflow/" + workflowId, req);
-        if (res.getCode() != 0) {
+        if (!isSuccess(res)) {
             MessageDialog.showDialog(res.getMsg());
             return;
         }
@@ -170,7 +173,7 @@ public class ApprovalWorkflowController extends ToolController {
         }
 
         DataResponse res = HttpRequestUtil.request("/api/approvalWorkflow/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             workflowList = (ArrayList<Map>) res.getData();
             setTableViewData();
         }
@@ -180,7 +183,7 @@ public class ApprovalWorkflowController extends ToolController {
     protected void onPendingButtonClick() {
         DataRequest req = new DataRequest();
         DataResponse res = HttpRequestUtil.request("/api/approvalWorkflow/pending/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             workflowList = (ArrayList<Map>) res.getData();
             setTableViewData();
         }
@@ -208,7 +211,7 @@ public class ApprovalWorkflowController extends ToolController {
         req.add("result", stateItem.getValue());
         req.add("approvalComment", comment);
         DataResponse res = HttpRequestUtil.request("/api/approvalWorkflow/approve", req);
-        if (res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("审批成功！");
             onQueryButtonClick();
         } else {
@@ -218,6 +221,10 @@ public class ApprovalWorkflowController extends ToolController {
 
     public void doNew() {
         clearPanel();
+    }
+
+    public void doSave() {
+        onApproveButtonClick();
     }
 
     public void doDelete() {

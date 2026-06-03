@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 
 public class CourseSelectionController extends ToolController {
+    private boolean isSuccess(DataResponse res) {
+        return res != null && (Integer.valueOf(0).equals(res.getCode()) || Integer.valueOf(200).equals(res.getCode()));
+    }
     @FXML
     private TableView<Map> dataTableView;
     @FXML
@@ -73,7 +76,7 @@ public class CourseSelectionController extends ToolController {
     public void initialize() {
         DataRequest req = new DataRequest();
         DataResponse res = HttpRequestUtil.request("/api/courseSelection/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             selectionList = (ArrayList<Map>) res.getData();
         }
 
@@ -120,7 +123,7 @@ public class CourseSelectionController extends ToolController {
         DataRequest req = new DataRequest();
         req.add("selectionId", selectionId);
         DataResponse res = HttpRequestUtil.request("/api/courseSelection/" + selectionId, req);
-        if (res.getCode() != 0) {
+        if (!isSuccess(res)) {
             MessageDialog.showDialog(res.getMsg());
             return;
         }
@@ -146,7 +149,7 @@ public class CourseSelectionController extends ToolController {
         req.add("studentNum", studentNum);
         req.add("studentName", studentName);
         DataResponse res = HttpRequestUtil.request("/api/courseSelection/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             selectionList = (ArrayList<Map>) res.getData();
             setTableViewData();
         }
@@ -172,7 +175,7 @@ public class CourseSelectionController extends ToolController {
         DataRequest req = new DataRequest();
         req.add("selectionId", selectionId);
         DataResponse res = HttpRequestUtil.request("/api/courseSelection/cancel", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("取消选课成功！");
             onQueryButtonClick();
         } else if (res != null) {
@@ -192,7 +195,7 @@ public class CourseSelectionController extends ToolController {
         req.add("studentNum", studentNum);
         req.add("courseNum", courseNum);
         DataResponse res = HttpRequestUtil.request("/api/courseSelection/select", req);
-        if (res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("选课成功！");
             onQueryButtonClick();
         } else {

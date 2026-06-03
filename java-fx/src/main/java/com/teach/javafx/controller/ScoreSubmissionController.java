@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 
 public class ScoreSubmissionController extends ToolController {
+    private boolean isSuccess(DataResponse res) {
+        return res != null && (Integer.valueOf(0).equals(res.getCode()) || Integer.valueOf(200).equals(res.getCode()));
+    }
     @FXML
     private TableView<Map> dataTableView;
     @FXML
@@ -79,7 +82,7 @@ public class ScoreSubmissionController extends ToolController {
     public void initialize() {
         DataRequest req = new DataRequest();
         DataResponse res = HttpRequestUtil.request("/api/scoreSubmission/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             submissionList = (ArrayList<Map>) res.getData();
         }
 
@@ -131,7 +134,7 @@ public class ScoreSubmissionController extends ToolController {
         DataRequest req = new DataRequest();
         req.add("submissionId", submissionId);
         DataResponse res = HttpRequestUtil.request("/api/scoreSubmission/" + submissionId, req);
-        if (res.getCode() != 0) {
+        if (!isSuccess(res)) {
             MessageDialog.showDialog(res.getMsg());
             return;
         }
@@ -165,7 +168,7 @@ public class ScoreSubmissionController extends ToolController {
         }
 
         DataResponse res = HttpRequestUtil.request("/api/scoreSubmission/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             submissionList = (ArrayList<Map>) res.getData();
             setTableViewData();
         }
@@ -175,7 +178,7 @@ public class ScoreSubmissionController extends ToolController {
     protected void onPendingButtonClick() {
         DataRequest req = new DataRequest();
         DataResponse res = HttpRequestUtil.request("/api/scoreSubmission/pending/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             submissionList = (ArrayList<Map>) res.getData();
             setTableViewData();
         }
@@ -203,7 +206,7 @@ public class ScoreSubmissionController extends ToolController {
         req.add("state", stateItem.getValue());
         req.add("comment", comment);
         DataResponse res = HttpRequestUtil.request("/api/scoreSubmission/approve", req);
-        if (res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("审批成功！");
             onQueryButtonClick();
         } else {
@@ -229,7 +232,7 @@ public class ScoreSubmissionController extends ToolController {
         req.add("submissionId", submissionId);
         req.add("state", "5");
         DataResponse res = HttpRequestUtil.request("/api/scoreSubmission/approve", req);
-        if (res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("发布成功！");
             onQueryButtonClick();
         } else {
@@ -239,6 +242,10 @@ public class ScoreSubmissionController extends ToolController {
 
     public void doNew() {
         clearPanel();
+    }
+
+    public void doSave() {
+        onApproveButtonClick();
     }
 
     public void doDelete() {

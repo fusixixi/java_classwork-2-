@@ -10,6 +10,7 @@ public class DataResponse {
     private Integer code;
     private Object data;
     private String msg;
+    private String message;
     public DataResponse(){
 
     }
@@ -36,11 +37,21 @@ public class DataResponse {
     }
 
     public String getMsg() {
-        return msg;
+        if (msg != null && !msg.isEmpty()) {
+            return msg;
+        }
+        return message;
     }
 
     public void setMsg(String msg) {
         this.msg = msg;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }
