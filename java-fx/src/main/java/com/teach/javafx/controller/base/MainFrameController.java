@@ -176,7 +176,6 @@ public class MainFrameController {
         initMenuBar(mList);
         initMenuTree(mList);
         contentTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
-        contentTabPane.setStyle("-fx-background-image: url('shanda1.jpg'); -fx-background-repeat: no-repeat; -fx-background-size: cover;");  //inline选择器
 
 
     }
