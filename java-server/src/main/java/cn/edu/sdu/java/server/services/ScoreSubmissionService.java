@@ -66,6 +66,9 @@ public class ScoreSubmissionService {
         if (score.isEmpty() || teacher.isEmpty() || student.isEmpty() || course.isEmpty()) {
             throw new RuntimeException("成绩、教师、学生或课程不存在");
         }
+        if (score.get().getStudent() == null || score.get().getCourse() == null) {
+            throw new RuntimeException("成绩记录数据不完整");
+        }
         if (!score.get().getStudent().getPersonId().equals(studentId) || !score.get().getCourse().getCourseId().equals(courseId)) {
             throw new RuntimeException("成绩记录与学生或课程不匹配");
         }
@@ -141,7 +144,7 @@ public class ScoreSubmissionService {
      * 查询所有待审批的成绩
      */
     public List<ScoreSubmission> getPendingApprovals() {
-        return scoreSubmissionRepository.findPendingApprovals();
+        return scoreSubmissionRepository.findPendingApprovals(STATE_PENDING);
     }
 
     /**

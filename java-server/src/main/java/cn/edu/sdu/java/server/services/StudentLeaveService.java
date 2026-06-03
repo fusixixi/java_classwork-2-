@@ -73,7 +73,7 @@ public class StudentLeaveService {
                 map.put("studentNum", s.getPerson().getNum());
                 map.put("studentName", s.getPerson().getName());
                 map.put("studentId", s.getPersonId());
-                map.put("teacherName", t == null ? "" : t.getPerson().getNum() + "-" + t.getPerson().getName());
+                map.put("teacherName", buildTeacherName(t));
                 map.put("state", sl.getState());
                 map.put("stateName", di.getDictionaryLabelByValue("SHZTM", sl.getState()+""));
                 map.put("reason", sl.getReason());
@@ -112,7 +112,7 @@ public class StudentLeaveService {
                 return CommonMethod.getReturnMessageError("当前学生不存在");
             }
             sl.setStudent(student.get());
-        } else if (sl.getState() != null && sl.getState() > STATE_TEACHER_REJECTED) {
+        } else if (sl.getState() != null && sl.getState() >= STATE_TEACHER_APPROVED) {
             return CommonMethod.getReturnMessageError("已完成审批的请假单不能修改");
         }
         if(teacherId != null && teacherId > 0) {
@@ -151,14 +151,14 @@ public class StudentLeaveService {
             return CommonMethod.getReturnMessageOK();
         }
         if ("ROLE_ADMIN".equals(roleName)) {
-            if (state == null || (state != STATE_TEACHER_APPROVED && state != STATE_TEACHER_REJECTED)) {
+            if (!isValidDecisionState(state)) {
                 return CommonMethod.getReturnMessageError("管理员审批状态无效");
             }
             sl.setAdminComment(adminComment);
             sl.setAdminTime(new Date());
             sl.setState(state+2);
         } else if("ROLE_TEACHER".equals(roleName)) {
-            if (state == null || (state != STATE_TEACHER_APPROVED && state != STATE_TEACHER_REJECTED)) {
+            if (!isValidDecisionState(state)) {
                 return CommonMethod.getReturnMessageError("教师审批状态无效");
             }
             sl.setTeacherComment(teacherComment);
@@ -169,5 +169,16 @@ public class StudentLeaveService {
         }
         studentLeaveRepository.save(sl);
         return CommonMethod.getReturnMessageOK();
+    }
+
+    private boolean isValidDecisionState(Integer state) {
+        return state != null && (state == STATE_TEACHER_APPROVED || state == STATE_TEACHER_REJECTED);
+    }
+
+    private String buildTeacherName(Teacher teacher) {
+        if (teacher == null || teacher.getPerson() == null) {
+            return "";
+        }
+        return teacher.getPerson().getNum() + "-" + teacher.getPerson().getName();
     }
 }
