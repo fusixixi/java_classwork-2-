@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * AttendanceService 考勤服务类
@@ -22,6 +23,7 @@ import java.util.Optional;
 @Service
 @Transactional
 public class AttendanceService {
+    private static final Set<String> VALID_ATTENDANCE_STATUS = Set.of("present", "absent", "late", "leave");
 
     @Autowired
     private AttendanceRepository attendanceRepository;
@@ -37,6 +39,7 @@ public class AttendanceService {
      */
     public Attendance recordAttendance(Integer studentId, Integer courseId, LocalDate date,
                                        String status, String remark) {
+        validateStatus(status);
         Optional<Student> student = studentRepository.findById(studentId);
         Optional<Course> course = courseRepository.findById(courseId);
 
@@ -59,6 +62,7 @@ public class AttendanceService {
      * 更新考勤状态
      */
     public void updateAttendanceStatus(Integer attendanceId, String status, String remark) {
+        validateStatus(status);
         Optional<Attendance> attendance = attendanceRepository.findById(attendanceId);
         if (attendance.isEmpty()) {
             throw new RuntimeException("考勤记录不存在");
@@ -113,6 +117,7 @@ public class AttendanceService {
      * 查询学生的缺勤记录
      */
     public List<Attendance> getAbsentRecords(Integer studentId) {
+        ensureStudentExists(studentId);
         return attendanceRepository.findAbsentRecords(studentId);
     }
 
@@ -120,6 +125,7 @@ public class AttendanceService {
      * 查询学生的迟到记录
      */
     public List<Attendance> getLateRecords(Integer studentId) {
+        ensureStudentExists(studentId);
         return attendanceRepository.findLateRecords(studentId);
     }
 
@@ -145,6 +151,9 @@ public class AttendanceService {
      * 删除考勤记录
      */
     public void deleteAttendance(Integer attendanceId) {
+        if (!attendanceRepository.existsById(attendanceId)) {
+            throw new RuntimeException("考勤记录不存在");
+        }
         attendanceRepository.deleteById(attendanceId);
     }
 
@@ -153,5 +162,17 @@ public class AttendanceService {
      */
     public List<Attendance> getAllAttendance() {
         return attendanceRepository.findAll();
+    }
+
+    private void validateStatus(String status) {
+        if (status == null || !VALID_ATTENDANCE_STATUS.contains(status)) {
+            throw new RuntimeException("考勤状态无效");
+        }
+    }
+
+    private void ensureStudentExists(Integer studentId) {
+        if (!studentRepository.existsById(studentId)) {
+            throw new RuntimeException("学生不存在");
+        }
     }
 }

@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * InnovationAchievementService 创新成果服务类
@@ -20,6 +21,10 @@ import java.util.Optional;
 @Service
 @Transactional
 public class InnovationAchievementService {
+    private static final int STATE_PENDING = 1;
+    private static final int STATE_APPROVED = 3;
+    private static final int STATE_REJECTED = 4;
+    private static final Set<Integer> VALID_APPROVAL_STATES = Set.of(STATE_APPROVED, STATE_REJECTED);
 
     @Autowired
     private InnovationAchievementRepository innovationAchievementRepository;
@@ -46,7 +51,7 @@ public class InnovationAchievementService {
         achievement.setAchievementDate(achievementDate);
         achievement.setAttachmentPath(attachmentPath);
         achievement.setSubmitTime(LocalDateTime.now());
-        achievement.setState(1);  // 1-待审批
+        achievement.setState(STATE_PENDING);  // 1-待审批
         achievement.setCreateTime(LocalDateTime.now());
         achievement.setUpdateTime(LocalDateTime.now());
 
@@ -57,6 +62,9 @@ public class InnovationAchievementService {
      * 审批创新成果
      */
     public void approveAchievement(Integer achievementId, Integer newState, String comment) {
+        if (newState == null || !VALID_APPROVAL_STATES.contains(newState)) {
+            throw new RuntimeException("审批状态无效");
+        }
         Optional<InnovationAchievement> achievement = innovationAchievementRepository.findById(achievementId);
         if (achievement.isEmpty()) {
             throw new RuntimeException("创新成果不存在");
@@ -87,7 +95,7 @@ public class InnovationAchievementService {
         if (student.isEmpty()) {
             throw new RuntimeException("学生不存在");
         }
-        return innovationAchievementRepository.findByStudentAndState(student.get(), 3);
+        return innovationAchievementRepository.findByStudentAndState(student.get(), STATE_APPROVED);
     }
 
     /**
@@ -115,7 +123,10 @@ public class InnovationAchievementService {
      * 按标题模糊查询
      */
     public List<InnovationAchievement> searchAchievements(String keyword) {
-        return innovationAchievementRepository.findByTitleContaining(keyword);
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return innovationAchievementRepository.findAll();
+        }
+        return innovationAchievementRepository.findByTitleContaining(keyword.trim());
     }
 
     /**
@@ -147,6 +158,9 @@ public class InnovationAchievementService {
      * 删除创新成果
      */
     public void deleteAchievement(Integer achievementId) {
+        if (!innovationAchievementRepository.existsById(achievementId)) {
+            throw new RuntimeException("创新成果不存在");
+        }
         innovationAchievementRepository.deleteById(achievementId);
     }
 

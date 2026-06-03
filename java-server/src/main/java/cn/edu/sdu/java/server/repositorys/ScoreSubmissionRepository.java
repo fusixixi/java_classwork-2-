@@ -50,8 +50,8 @@ public interface ScoreSubmissionRepository extends JpaRepository<ScoreSubmission
     /**
      * 查询待审批的成绩
      */
-    @Query("SELECT ss FROM ScoreSubmission ss WHERE ss.state = 2 ORDER BY ss.submissionTime DESC")
-    List<ScoreSubmission> findPendingApprovals();
+    @Query("SELECT ss FROM ScoreSubmission ss WHERE ss.state = :state ORDER BY ss.submissionTime DESC")
+    List<ScoreSubmission> findPendingApprovals(@Param("state") Integer state);
 
     /**
      * 查询已发布的成绩
