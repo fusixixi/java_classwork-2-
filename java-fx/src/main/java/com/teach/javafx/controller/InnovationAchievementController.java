@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 public class InnovationAchievementController extends ToolController {
+    private boolean isSuccess(DataResponse res) {
+        return res != null && (Integer.valueOf(0).equals(res.getCode()) || Integer.valueOf(200).equals(res.getCode()));
+    }
     @FXML
     private TableView<Map> dataTableView;
     @FXML
@@ -79,7 +82,7 @@ public class InnovationAchievementController extends ToolController {
     public void initialize() {
         DataRequest req = new DataRequest();
         DataResponse res = HttpRequestUtil.request("/api/innovationAchievement/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             achievementList = (ArrayList<Map>) res.getData();
         }
 
@@ -138,7 +141,7 @@ public class InnovationAchievementController extends ToolController {
         DataRequest req = new DataRequest();
         req.add("achievementId", achievementId);
         DataResponse res = HttpRequestUtil.request("/api/innovationAchievement/" + achievementId, req);
-        if (res.getCode() != 0) {
+        if (!isSuccess(res)) {
             MessageDialog.showDialog(res.getMsg());
             return;
         }
@@ -166,7 +169,7 @@ public class InnovationAchievementController extends ToolController {
         req.add("studentNum", studentNum);
         req.add("title", title);
         DataResponse res = HttpRequestUtil.request("/api/innovationAchievement/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             achievementList = (ArrayList<Map>) res.getData();
             setTableViewData();
         }
@@ -192,7 +195,7 @@ public class InnovationAchievementController extends ToolController {
         DataRequest req = new DataRequest();
         req.add("achievementId", achievementId);
         DataResponse res = HttpRequestUtil.request("/api/innovationAchievement/" + achievementId, req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("删除成功！");
             onQueryButtonClick();
         } else if (res != null) {
@@ -226,7 +229,7 @@ public class InnovationAchievementController extends ToolController {
         req.add("achievementDate", achievementDate);
         req.add("attachmentPath", attachmentField.getText());
         DataResponse res = HttpRequestUtil.request("/api/innovationAchievement/submit", req);
-        if (res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("提交成功！");
             onQueryButtonClick();
         } else {
@@ -270,7 +273,7 @@ public class InnovationAchievementController extends ToolController {
         req.add("state", stateItem.getValue());
         req.add("comment", comment);
         DataResponse res = HttpRequestUtil.request("/api/innovationAchievement/approve", req);
-        if (res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("审批成功！");
             onQueryButtonClick();
         } else {

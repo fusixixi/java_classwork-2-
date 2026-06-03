@@ -1,14 +1,23 @@
 package cn.edu.sdu.java.server.controllers;
 
 import cn.edu.sdu.java.server.models.InnovationAchievement;
+import cn.edu.sdu.java.server.models.Student;
+import cn.edu.sdu.java.server.payload.request.DataRequest;
+import cn.edu.sdu.java.server.payload.response.DataResponse;
+import cn.edu.sdu.java.server.repositorys.StudentRepository;
 import cn.edu.sdu.java.server.services.InnovationAchievementService;
+import cn.edu.sdu.java.server.util.CommonMethod;
 import cn.edu.sdu.java.server.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * InnovationAchievementController 创新成果管理控制器
@@ -21,6 +30,8 @@ public class InnovationAchievementController {
 
     @Autowired
     private InnovationAchievementService innovationAchievementService;
+    @Autowired
+    private StudentRepository studentRepository;
 
     /**
      * 学生提交创新成果
@@ -28,13 +39,46 @@ public class InnovationAchievementController {
      */
     @PostMapping("/submit")
     public ResponseEntity<?> submitAchievement(
-            @RequestParam Integer studentId,
-            @RequestParam String title,
-            @RequestParam String description,
-            @RequestParam String category,
-            @RequestParam String achievementDate,
-            @RequestParam(required = false) String attachmentPath) {
+            @RequestParam(required = false) Integer studentId,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String achievementDate,
+            @RequestParam(required = false) String attachmentPath,
+            @RequestBody(required = false) DataRequest dataRequest) {
         try {
+            if (dataRequest != null) {
+                if (studentId == null) {
+                    studentId = dataRequest.getInteger("studentId");
+                }
+                if (title == null || title.isEmpty()) {
+                    title = dataRequest.getString("title");
+                }
+                if (description == null) {
+                    description = dataRequest.getString("description");
+                }
+                if (category == null || category.isEmpty()) {
+                    category = dataRequest.getString("category");
+                }
+                if (achievementDate == null || achievementDate.isEmpty()) {
+                    achievementDate = dataRequest.getString("achievementDate");
+                }
+                if (attachmentPath == null) {
+                    attachmentPath = dataRequest.getString("attachmentPath");
+                }
+                if (studentId == null) {
+                    String studentNum = dataRequest.getString("studentNum");
+                    if (studentNum != null && !studentNum.isEmpty()) {
+                        Optional<Student> student = studentRepository.findByPersonNum(studentNum);
+                        if (student.isPresent()) {
+                            studentId = student.get().getPersonId();
+                        }
+                    }
+                }
+            }
+            if (studentId == null || title == null || title.isEmpty() || achievementDate == null || achievementDate.isEmpty()) {
+                return ResponseUtil.error("缺少必要参数");
+            }
             LocalDate date = LocalDate.parse(achievementDate);
             InnovationAchievement achievement = innovationAchievementService.submitAchievement(
                     studentId, title, description, category, date, attachmentPath);
@@ -213,5 +257,66 @@ public class InnovationAchievementController {
         } catch (Exception e) {
             return ResponseUtil.error("查询失败：" + e.getMessage());
         }
+    }
+
+    @PostMapping("/all")
+    public DataResponse getAllAchievementsPost(@RequestBody(required = false) DataRequest dataRequest) {
+        try {
+            String studentNum = dataRequest == null ? null : dataRequest.getString("studentNum");
+            String title = dataRequest == null ? null : dataRequest.getString("title");
+            List<InnovationAchievement> achievements = innovationAchievementService.getAllAchievements();
+            List<Map<String,Object>> dataList = new ArrayList<>();
+            for (InnovationAchievement achievement : achievements) {
+                if (achievement.getStudent() == null || achievement.getStudent().getPerson() == null) {
+                    continue;
+                }
+                if (studentNum != null && !studentNum.isBlank() && !achievement.getStudent().getPerson().getNum().contains(studentNum)) {
+                    continue;
+                }
+                if (title != null && !title.isBlank() && (achievement.getTitle() == null || !achievement.getTitle().contains(title))) {
+                    continue;
+                }
+                dataList.add(toAchievementMap(achievement));
+            }
+            return CommonMethod.getReturnData(dataList);
+        } catch (Exception e) {
+            return CommonMethod.getReturnMessageError("查询失败：" + e.getMessage());
+        }
+    }
+
+    private Map<String,Object> toAchievementMap(InnovationAchievement achievement) {
+        Map<String,Object> map = new HashMap<>();
+        map.put("achievementId", achievement.getAchievementId());
+        map.put("studentNum", achievement.getStudent().getPerson().getNum());
+        map.put("studentName", achievement.getStudent().getPerson().getName());
+        map.put("title", achievement.getTitle());
+        map.put("description", achievement.getDescription());
+        map.put("category", achievement.getCategory());
+        map.put("achievementDate", achievement.getAchievementDate() == null ? "" : achievement.getAchievementDate().toString());
+        map.put("submitTime", achievement.getSubmitTime() == null ? "" : achievement.getSubmitTime().toString().replace('T',' '));
+        map.put("state", achievement.getState());
+        map.put("stateName", getStateName(achievement.getState()));
+        map.put("attachmentPath", achievement.getAttachmentPath());
+        map.put("approvalComment", "");
+        return map;
+    }
+
+    private String getStateName(Integer state) {
+        if (state == null) {
+            return "";
+        }
+        if (state == 1) {
+            return "待审批";
+        }
+        if (state == 2) {
+            return "审批中";
+        }
+        if (state == 3) {
+            return "已通过";
+        }
+        if (state == 4) {
+            return "已拒绝";
+        }
+        return state.toString();
     }
 }

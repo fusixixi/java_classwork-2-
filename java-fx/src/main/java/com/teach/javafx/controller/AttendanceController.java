@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 public class AttendanceController extends ToolController {
+    private boolean isSuccess(DataResponse res) {
+        return res != null && (Integer.valueOf(0).equals(res.getCode()) || Integer.valueOf(200).equals(res.getCode()));
+    }
     @FXML
     private TableView<Map> dataTableView;
     @FXML
@@ -76,7 +79,7 @@ public class AttendanceController extends ToolController {
     public void initialize() {
         DataRequest req = new DataRequest();
         DataResponse res = HttpRequestUtil.request("/api/attendance/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             attendanceList = (ArrayList<Map>) res.getData();
         }
 
@@ -126,7 +129,7 @@ public class AttendanceController extends ToolController {
         DataRequest req = new DataRequest();
         req.add("attendanceId", attendanceId);
         DataResponse res = HttpRequestUtil.request("/api/attendance/" + attendanceId, req);
-        if (res.getCode() != 0) {
+        if (!isSuccess(res)) {
             MessageDialog.showDialog(res.getMsg());
             return;
         }
@@ -153,7 +156,7 @@ public class AttendanceController extends ToolController {
         req.add("studentName", studentName);
         req.add("courseName", courseName);
         DataResponse res = HttpRequestUtil.request("/api/attendance/all", req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             attendanceList = (ArrayList<Map>) res.getData();
             setTableViewData();
         }
@@ -179,7 +182,7 @@ public class AttendanceController extends ToolController {
         DataRequest req = new DataRequest();
         req.add("attendanceId", attendanceId);
         DataResponse res = HttpRequestUtil.request("/api/attendance/" + attendanceId, req);
-        if (res != null && res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("删除成功！");
             onQueryButtonClick();
         } else if (res != null) {
@@ -211,7 +214,7 @@ public class AttendanceController extends ToolController {
         req.add("status", statusItem.getValue());
         req.add("remark", remarkField.getText());
         DataResponse res = HttpRequestUtil.request("/api/attendance/record", req);
-        if (res.getCode() == 0) {
+        if (isSuccess(res)) {
             MessageDialog.showDialog("保存成功！");
             onQueryButtonClick();
         } else {
@@ -231,7 +234,7 @@ public class AttendanceController extends ToolController {
         req.add("studentNum", studentNum);
         req.add("courseName", courseName);
         DataResponse res = HttpRequestUtil.request("/api/attendance/rate", req);
-        if (res.getCode() == 0) {
+        if (isSuccess(res)) {
             Double rate = (Double) res.getData();
             attendanceRateField.setText(String.format("%.2f%%", rate));
         } else {
