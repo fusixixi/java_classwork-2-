@@ -8,7 +8,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.Button;
 import java.io.IOException;
 
 /**
@@ -37,21 +36,35 @@ public class LoginController {
      */
     @FXML
     protected void onAdminLoginButtonClick() {
-        onLoginButtonClick("admin","123456");
+        loginByRole("ROLE_ADMIN", "admin", "123456");
     }
     @FXML
     protected void onStudentLoginButtonClick() {
-        onLoginButtonClick("2022030001","123456");
+        loginByRole("ROLE_STUDENT", "2022030001", "123456");
     }
     @FXML
     protected void onTeacherLoginButtonClick() {
-        onLoginButtonClick("200799013517","123456");
+        loginByRole("ROLE_TEACHER", "200799013517", "123456");
     }
-    protected void onLoginButtonClick(String username, String password) {
+
+    private void loginByRole(String expectedRole, String defaultUserName, String defaultPassword) {
+        String inputUser = usernameField.getText();
+        String inputPassword = passwordField.getText();
+        String userName = (inputUser == null || inputUser.isBlank()) ? defaultUserName : inputUser.trim();
+        String password = (inputPassword == null || inputPassword.isBlank()) ? defaultPassword : inputPassword;
+        onLoginButtonClick(userName, password, expectedRole);
+    }
+
+    protected void onLoginButtonClick(String username, String password, String expectedRole) {
         LoginRequest loginRequest = new LoginRequest(username,password);
         String msg = HttpRequestUtil.login(loginRequest);
         if(msg != null) {
             MessageDialog.showDialog( msg);
+            return;
+        }
+        if (AppStore.getJwt() == null || AppStore.getJwt().getRole() == null || !expectedRole.equals(AppStore.getJwt().getRole())) {
+            AppStore.setJwt(null);
+            MessageDialog.showDialog("当前账号不是对应身份，请检查用户名或切换登录入口。");
             return;
         }
         FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("base/main-frame.fxml"));
