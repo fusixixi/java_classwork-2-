@@ -34,6 +34,9 @@ import java.util.stream.Collectors;
 @Service
 public class BaseService {
     private static final Logger log = LoggerFactory.getLogger(BaseService.class);
+    private static final int ADMIN_USER_TYPE_ID = 1;
+    private static final int STUDENT_USER_TYPE_ID = 2;
+    private static final int TEACHER_USER_TYPE_ID = 3;
     @Value("${attach.folder}")    //环境配置变量获取
     private String attachFolder;  //服务器端数据存储
     @Value("${spring.datasource.username}")    //环境配置变量获取
@@ -154,6 +157,7 @@ public class BaseService {
     public DataResponse getMenuList(DataRequest dataRequest) {
         List<Map<String, Object>> dataList = new ArrayList<>();
         Integer userTypeId = dataRequest.getInteger("userTypeId");
+        String roleName = CommonMethod.getRoleName();
         if (userTypeId == null) {
             Integer personId = CommonMethod.getPersonId();
             if (personId == null)
@@ -180,7 +184,101 @@ public class BaseService {
             m.put("sList", sList);
             dataList.add(m);
         }
+        dataList = buildRoleMenuList(roleName, userTypeId, dataList);
         return CommonMethod.getReturnData(dataList);
+    }
+
+    private List<Map<String, Object>> buildRoleMenuList(String roleName, Integer userTypeId, List<Map<String, Object>> originList) {
+        if (isStudentRole(roleName, userTypeId)) {
+            return buildStudentMenuList();
+        }
+        if (isTeacherRole(roleName, userTypeId)) {
+            return buildTeacherMenuList();
+        }
+        if (isAdminRole(roleName, userTypeId)) {
+            ensureTeacherManagementMenu(originList);
+        }
+        return originList;
+    }
+
+    private boolean isAdminRole(String roleName, Integer userTypeId) {
+        return "ROLE_ADMIN".equals(roleName) || (userTypeId != null && userTypeId == ADMIN_USER_TYPE_ID);
+    }
+
+    private boolean isStudentRole(String roleName, Integer userTypeId) {
+        return "ROLE_STUDENT".equals(roleName) || (userTypeId != null && userTypeId == STUDENT_USER_TYPE_ID);
+    }
+
+    private boolean isTeacherRole(String roleName, Integer userTypeId) {
+        return "ROLE_TEACHER".equals(roleName) || (userTypeId != null && userTypeId == TEACHER_USER_TYPE_ID);
+    }
+
+    private List<Map<String, Object>> buildStudentMenuList() {
+        List<Map<String, Object>> studentModules = new ArrayList<>();
+        studentModules.add(createMenuNode("student-panel", "个人信息", 0, Collections.emptyList()));
+        studentModules.add(createMenuNode("base/courseSelection", "我的选课", 0, Collections.emptyList()));
+        studentModules.add(createMenuNode("base/attendance", "我的考勤", 0, Collections.emptyList()));
+        studentModules.add(createMenuNode("base/innovationAchievement", "我的创新成果", 0, Collections.emptyList()));
+        studentModules.add(createMenuNode("student-leave-panel", "我的审批", 0, Collections.emptyList()));
+        studentModules.add(createMenuNode("base/scoreSubmission", "我的成绩提交", 0, Collections.emptyList()));
+        return new ArrayList<>(List.of(createMenuNode("studentModules", "学生功能", 1, studentModules)));
+    }
+
+    private List<Map<String, Object>> buildTeacherMenuList() {
+        List<Map<String, Object>> teacherModules = new ArrayList<>();
+        teacherModules.add(createMenuNode("course-panel", "我的教学课程", 0, Collections.emptyList()));
+        teacherModules.add(createMenuNode("base/attendance", "考勤管理", 0, Collections.emptyList()));
+        teacherModules.add(createMenuNode("base/innovationAchievement", "创新成果管理", 0, Collections.emptyList()));
+        teacherModules.add(createMenuNode("student-leave-panel", "审批流程管理", 0, Collections.emptyList()));
+        teacherModules.add(createMenuNode("base/scoreSubmission", "成绩提交审核", 0, Collections.emptyList()));
+        return new ArrayList<>(List.of(createMenuNode("teacherModules", "教师功能", 1, teacherModules)));
+    }
+
+    private Map<String, Object> createMenuNode(String name, String title, Integer isLeft, List<Map<String, Object>> children) {
+        Map<String, Object> node = new HashMap<>();
+        String path = name == null || name.isEmpty() ? "" : name.substring(0, 1).toLowerCase() + name.substring(1);
+        node.put("id", null);
+        node.put("name", name);
+        node.put("path", path);
+        node.put("title", title);
+        node.put("isLeft", isLeft);
+        node.put("sList", children == null ? new ArrayList<>() : children);
+        return node;
+    }
+
+    private void ensureTeacherManagementMenu(List<Map<String, Object>> originList) {
+        if (originList == null) {
+            return;
+        }
+        Map<String, Object> personMenu = null;
+        for (Map<String, Object> root : originList) {
+            String title = CommonMethod.getString(root, "title");
+            if ("人员管理".equals(title)) {
+                personMenu = root;
+                break;
+            }
+        }
+        if (personMenu == null) {
+            personMenu = createMenuNode("personManage", "人员管理", 1, new ArrayList<>());
+            originList.add(personMenu);
+        }
+        List<Map<String, Object>> childList = new ArrayList<>();
+        for (Object item : CommonMethod.getList(personMenu, "sList")) {
+            if (item instanceof Map<?, ?> map) {
+                childList.add((Map<String, Object>) map);
+            }
+        }
+        boolean exist = false;
+        for (Map<String, Object> item : childList) {
+            if ("教师管理".equals(CommonMethod.getString(item, "title"))) {
+                exist = true;
+                break;
+            }
+        }
+        if (!exist) {
+            childList.add(createMenuNode("teacher-panel", "教师管理", 0, Collections.emptyList()));
+        }
+        personMenu.put("sList", childList);
     }
 
 
