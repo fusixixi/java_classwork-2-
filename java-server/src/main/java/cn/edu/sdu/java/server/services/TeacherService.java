@@ -107,8 +107,9 @@ public class TeacherService {
             }
         }
         Optional<Person> nOp = personRepository.findByNum(num);
+        Person currentPerson = t == null ? null : t.getPerson();
         if (nOp.isPresent()) {
-            if (t == null || !num.equals(t.getPerson().getNum())) {
+            if (currentPerson == null || !num.equals(currentPerson.getNum())) {
                 return CommonMethod.getReturnMessageError("工号已经存在，不能添加或修改！");
             }
         }
@@ -134,6 +135,9 @@ public class TeacherService {
             teacherRepository.saveAndFlush(t);
         } else {
             p = t.getPerson();
+            if (p == null) {
+                return CommonMethod.getReturnMessageError("教师人员信息异常，无法保存");
+            }
         }
 
         if (!num.equals(p.getNum())) {

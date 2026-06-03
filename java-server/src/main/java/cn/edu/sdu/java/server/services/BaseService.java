@@ -34,6 +34,9 @@ import java.util.stream.Collectors;
 @Service
 public class BaseService {
     private static final Logger log = LoggerFactory.getLogger(BaseService.class);
+    private static final int ADMIN_USER_TYPE_ID = 1;
+    private static final int STUDENT_USER_TYPE_ID = 2;
+    private static final int TEACHER_USER_TYPE_ID = 3;
     @Value("${attach.folder}")    //环境配置变量获取
     private String attachFolder;  //服务器端数据存储
     @Value("${spring.datasource.username}")    //环境配置变量获取
@@ -199,15 +202,15 @@ public class BaseService {
     }
 
     private boolean isAdminRole(String roleName, Integer userTypeId) {
-        return "ROLE_ADMIN".equals(roleName) || Integer.valueOf(1).equals(userTypeId);
+        return "ROLE_ADMIN".equals(roleName) || (userTypeId != null && userTypeId == ADMIN_USER_TYPE_ID);
     }
 
     private boolean isStudentRole(String roleName, Integer userTypeId) {
-        return "ROLE_STUDENT".equals(roleName) || Integer.valueOf(2).equals(userTypeId);
+        return "ROLE_STUDENT".equals(roleName) || (userTypeId != null && userTypeId == STUDENT_USER_TYPE_ID);
     }
 
     private boolean isTeacherRole(String roleName, Integer userTypeId) {
-        return "ROLE_TEACHER".equals(roleName) || Integer.valueOf(3).equals(userTypeId);
+        return "ROLE_TEACHER".equals(roleName) || (userTypeId != null && userTypeId == TEACHER_USER_TYPE_ID);
     }
 
     private List<Map<String, Object>> buildStudentMenuList() {
