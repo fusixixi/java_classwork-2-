@@ -147,11 +147,7 @@ public class ApprovalWorkflowService {
      * 查询指定业务的最新审批流程
      */
     public ApprovalWorkflow getLatestWorkflow(Integer relatedId) {
-        ApprovalWorkflow workflow = approvalWorkflowRepository.findFirstByRelatedIdOrderByCreateTimeDesc(relatedId);
-        if (workflow == null) {
-            throw new RuntimeException("审批流程不存在");
-        }
-        return workflow;
+        return approvalWorkflowRepository.findFirstByRelatedIdOrderByCreateTimeDesc(relatedId);
     }
 
     /**

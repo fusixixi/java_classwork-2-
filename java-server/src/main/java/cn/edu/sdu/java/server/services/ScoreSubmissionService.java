@@ -27,11 +27,14 @@ import java.util.Set;
 @Service
 @Transactional
 public class ScoreSubmissionService {
+    private static final int MIN_SCORE = 0;
+    private static final int MAX_SCORE = 100;
     private static final int STATE_PENDING = 1;
     private static final int STATE_APPROVED = 3;
     private static final int STATE_REJECTED = 4;
     private static final int STATE_PUBLISHED = 5;
     private static final Set<Integer> VALID_APPROVAL_STATES = Set.of(STATE_APPROVED, STATE_REJECTED, STATE_PUBLISHED);
+    private static final Set<Integer> APPROVABLE_SOURCE_STATES = Set.of(STATE_PENDING, STATE_APPROVED);
 
     @Autowired
     private ScoreSubmissionRepository scoreSubmissionRepository;
@@ -101,7 +104,7 @@ public class ScoreSubmissionService {
         }
 
         ScoreSubmission ss = submission.get();
-        if (ss.getState() != STATE_PENDING && ss.getState() != STATE_APPROVED) {
+        if (!APPROVABLE_SOURCE_STATES.contains(ss.getState())) {
             throw new RuntimeException("当前状态不允许审批");
         }
         if (newState == STATE_PUBLISHED && ss.getState() != STATE_APPROVED) {
@@ -211,8 +214,8 @@ public class ScoreSubmissionService {
     }
 
     private void validateScore(Integer submittedScore) {
-        if (submittedScore == null || submittedScore < 0 || submittedScore > 100) {
-            throw new RuntimeException("成绩范围必须在0到100之间");
+        if (submittedScore == null || submittedScore < MIN_SCORE || submittedScore > MAX_SCORE) {
+            throw new RuntimeException("成绩范围必须在" + MIN_SCORE + "到" + MAX_SCORE + "之间");
         }
     }
 }

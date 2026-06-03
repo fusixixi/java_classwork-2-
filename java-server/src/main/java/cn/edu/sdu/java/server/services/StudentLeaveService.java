@@ -73,7 +73,7 @@ public class StudentLeaveService {
                 map.put("studentNum", s.getPerson().getNum());
                 map.put("studentName", s.getPerson().getName());
                 map.put("studentId", s.getPersonId());
-                map.put("teacherName", buildTeacherName(t));
+                map.put("teacherName", buildTeacherDisplayName(t));
                 map.put("state", sl.getState());
                 map.put("stateName", di.getDictionaryLabelByValue("SHZTM", sl.getState()+""));
                 map.put("reason", sl.getReason());
@@ -175,7 +175,7 @@ public class StudentLeaveService {
         return state != null && (state == STATE_TEACHER_APPROVED || state == STATE_TEACHER_REJECTED);
     }
 
-    private String buildTeacherName(Teacher teacher) {
+    private String buildTeacherDisplayName(Teacher teacher) {
         if (teacher == null || teacher.getPerson() == null) {
             return "";
         }
