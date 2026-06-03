@@ -37,7 +37,7 @@ public class DataResponse {
     }
 
     public String getMsg() {
-        if(msg != null && !msg.isEmpty()) {
+        if (msg != null && !msg.isEmpty()) {
             return msg;
         }
         return message;

@@ -91,7 +91,10 @@ public class AttendanceController {
                     String courseName = dataRequest.getString("courseName");
                     if (courseName != null && !courseName.isEmpty()) {
                         List<Course> courseList = courseRepository.findByName(courseName);
-                        if (!courseList.isEmpty()) {
+                        if (courseList.size() > 1) {
+                            return ResponseUtil.error("存在同名课程，请改用课程编号");
+                        }
+                        if (courseList.size() == 1) {
                             courseId = courseList.get(0).getCourseId();
                         }
                     }
