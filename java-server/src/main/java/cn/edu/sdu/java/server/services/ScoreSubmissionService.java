@@ -10,6 +10,7 @@ import cn.edu.sdu.java.server.repositorys.ScoreRepository;
 import cn.edu.sdu.java.server.repositorys.TeacherRepository;
 import cn.edu.sdu.java.server.repositorys.StudentRepository;
 import cn.edu.sdu.java.server.repositorys.CourseRepository;
+import cn.edu.sdu.java.server.repositorys.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * ScoreSubmissionService 成绩提交审核服务类
@@ -25,6 +27,11 @@ import java.util.Optional;
 @Service
 @Transactional
 public class ScoreSubmissionService {
+    private static final int STATE_PENDING = 1;
+    private static final int STATE_APPROVED = 3;
+    private static final int STATE_REJECTED = 4;
+    private static final int STATE_PUBLISHED = 5;
+    private static final Set<Integer> VALID_APPROVAL_STATES = Set.of(STATE_APPROVED, STATE_REJECTED, STATE_PUBLISHED);
 
     @Autowired
     private ScoreSubmissionRepository scoreSubmissionRepository;
@@ -41,12 +48,16 @@ public class ScoreSubmissionService {
     @Autowired
     private CourseRepository courseRepository;
 
+    @Autowired
+    private PersonRepository personRepository;
+
     /**
      * 教师提交成绩
      */
     public ScoreSubmission submitScore(Integer scoreId, Integer teacherId,
                                        Integer studentId, Integer courseId,
                                        Integer submittedScore) {
+        validateScore(submittedScore);
         Optional<Score> score = scoreRepository.findById(scoreId);
         Optional<Teacher> teacher = teacherRepository.findById(teacherId);
         Optional<Student> student = studentRepository.findById(studentId);
@@ -54,6 +65,9 @@ public class ScoreSubmissionService {
 
         if (score.isEmpty() || teacher.isEmpty() || student.isEmpty() || course.isEmpty()) {
             throw new RuntimeException("成绩、教师、学生或课程不存在");
+        }
+        if (!score.get().getStudent().getPersonId().equals(studentId) || !score.get().getCourse().getCourseId().equals(courseId)) {
+            throw new RuntimeException("成绩记录与学生或课程不匹配");
         }
 
         ScoreSubmission submission = new ScoreSubmission();
@@ -63,7 +77,7 @@ public class ScoreSubmissionService {
         submission.setCourse(course.get());
         submission.setSubmittedScore(submittedScore);
         submission.setSubmissionTime(LocalDateTime.now());
-        submission.setState(1);  // 1-待审批
+        submission.setState(STATE_PENDING);  // 1-待审批
 
         return scoreSubmissionRepository.save(submission);
     }
@@ -72,17 +86,29 @@ public class ScoreSubmissionService {
      * 审批成绩
      */
     public void approveScore(Integer submissionId, Integer newState, String comment, Integer approverId) {
+        if (newState == null || !VALID_APPROVAL_STATES.contains(newState)) {
+            throw new RuntimeException("审批状态无效");
+        }
+        if (approverId == null || !personRepository.existsById(approverId)) {
+            throw new RuntimeException("审批人不存在");
+        }
         Optional<ScoreSubmission> submission = scoreSubmissionRepository.findById(submissionId);
         if (submission.isEmpty()) {
             throw new RuntimeException("成绩提交记录不存在");
         }
 
         ScoreSubmission ss = submission.get();
+        if (ss.getState() != STATE_PENDING && ss.getState() != STATE_APPROVED) {
+            throw new RuntimeException("当前状态不允许审批");
+        }
+        if (newState == STATE_PUBLISHED && ss.getState() != STATE_APPROVED) {
+            throw new RuntimeException("仅已通过记录可以发布");
+        }
         ss.setState(newState);  // 2-审批中，3-已通过，4-已拒绝，5-已发布
         ss.setApprovalComment(comment);
         ss.setApprovalTime(LocalDateTime.now());
 
-        if (newState == 5) {  // 已发布
+        if (newState == STATE_PUBLISHED) {  // 已发布
             ss.setPublishTime(LocalDateTime.now());
             // 更新score表的成绩
             Score score = ss.getScore();
@@ -168,6 +194,9 @@ public class ScoreSubmissionService {
      * 删除成绩提交记录
      */
     public void deleteSubmission(Integer submissionId) {
+        if (!scoreSubmissionRepository.existsById(submissionId)) {
+            throw new RuntimeException("成绩提交记录不存在");
+        }
         scoreSubmissionRepository.deleteById(submissionId);
     }
 
@@ -176,5 +205,11 @@ public class ScoreSubmissionService {
      */
     public List<ScoreSubmission> getAllSubmissions() {
         return scoreSubmissionRepository.findAll();
+    }
+
+    private void validateScore(Integer submittedScore) {
+        if (submittedScore == null || submittedScore < 0 || submittedScore > 100) {
+            throw new RuntimeException("成绩范围必须在0到100之间");
+        }
     }
 }

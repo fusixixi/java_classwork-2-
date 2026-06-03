@@ -72,7 +72,5 @@ public interface ApprovalWorkflowRepository extends JpaRepository<ApprovalWorkfl
     /**
      * 查询指定关联业务的最新审批流程
      */
-    @Query("SELECT aw FROM ApprovalWorkflow aw WHERE aw.relatedId = :relatedId " +
-            "ORDER BY aw.createTime DESC LIMIT 1")
-    ApprovalWorkflow findLatestByRelatedId(@Param("relatedId") Integer relatedId);
+    ApprovalWorkflow findFirstByRelatedIdOrderByCreateTimeDesc(Integer relatedId);
 }
